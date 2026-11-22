@@ -344,7 +344,8 @@ async function renderPage({
         ? renderList(dates)
         : renderCalendar(dates, month, selectedDate));
   } else {
-    content = `<p>Enter the password to see the upcoming dates.</p>
+    content = `<p>Enter the password to see the upcoming dates & updates.</p>
+<p>don't know the password please email us to find out</p>
         <form class="password-form" method="post" action="/dates">
           <label for="password">Password</label>
           <input id="password" name="password" type="password" autocomplete="current-password" required>
