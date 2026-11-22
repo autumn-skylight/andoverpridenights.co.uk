@@ -158,7 +158,7 @@ function ensureMinimumMonth(selectedMonth) {
   return selectedKey < EARLIEST_MONTH.key ? EARLIEST_MONTH : selectedMonth;
 }
 
-function renderList(dates, selectedMonth) {
+function renderList(dates) {
   if (!dates.length) {
     return `<p>No dates have been published yet.</p>`;
   }
@@ -166,47 +166,55 @@ function renderList(dates, selectedMonth) {
   const sortedDates = [...dates].sort((left, right) =>
     String(left.date).localeCompare(String(right.date)),
   );
-  const filteredDates = selectedMonth
-    ? sortedDates.filter((entry) => entry.date.startsWith(selectedMonth.key))
-    : sortedDates;
+  const groupedDates = new Map();
+  sortedDates.forEach((entry) => {
+    const monthKey = entry.date.slice(0, 7);
+    if (!groupedDates.has(monthKey)) {
+      groupedDates.set(monthKey, []);
+    }
+    groupedDates.get(monthKey).push(entry);
+  });
 
-  if (!filteredDates.length) {
-    return `<p>No meet-ups are listed for ${escapeHtml(formatMonth(selectedMonth.year, selectedMonth.month))}.</p>`;
-  }
+  return [...groupedDates.entries()]
+    .map(([monthKey, monthDates]) => {
+      const month = parseMonth(monthKey);
+      return `
+        <section class="dates-month-group" id="month-${monthKey}">
+          <h2 class="dates-list-month">
+            <a href="/dates?view=calendar&amp;month=${monthKey}">
+              ${escapeHtml(formatMonth(month.year, month.month))}
+            </a>
+          </h2>
+          <ol class="dates-list">
+            ${monthDates
+              .map(({ date, beside = "", underneath = "" }) => {
+                const label = formatDate(date);
+                const besideText =
+                  typeof beside === "string" ? beside.trim() : "";
+                const underneathText =
+                  typeof underneath === "string" ? underneath.trim() : "";
+                const besideMarkup = besideText
+                  ? `<span class="date-update-beside">${escapeHtml(besideText)}</span>`
+                  : "";
+                const underneathMarkup = underneathText
+                  ? `<p class="date-update-underneath">${escapeHtml(underneathText)}</p>`
+                  : "";
 
-  return `
-    <h2 class="dates-list-month">
-      <a href="/dates?view=calendar&amp;month=${selectedMonth.key}">
-        ${escapeHtml(formatMonth(selectedMonth.year, selectedMonth.month))}
-      </a>
-    </h2>
-    <ol class="dates-list">
-      ${filteredDates
-        .map(({ date, beside = "", underneath = "" }) => {
-          const label = formatDate(date);
-          const monthKey = date.slice(0, 7);
-          const besideText = typeof beside === "string" ? beside.trim() : "";
-          const underneathText =
-            typeof underneath === "string" ? underneath.trim() : "";
-          const besideMarkup = besideText
-            ? `<span class="date-update-beside">${escapeHtml(besideText)}</span>`
-            : "";
-          const underneathMarkup = underneathText
-            ? `<p class="date-update-underneath">${escapeHtml(underneathText)}</p>`
-            : "";
-
-          return `
-            <li id="date-${escapeHtml(date)}">
-              <a class="date-link" href="/dates?view=calendar&amp;month=${monthKey}&amp;date=${escapeHtml(date)}">
-                <strong>${label}</strong>${besideMarkup}
-              </a>
-              ${underneathMarkup}
-            </li>
-          `;
-        })
-        .join("")}
-    </ol>
-  `;
+                return `
+                  <li id="date-${escapeHtml(date)}">
+                    <a class="date-link" href="/dates?view=calendar&amp;month=${monthKey}&amp;date=${escapeHtml(date)}">
+                      <strong>${label}</strong>${besideMarkup}
+                    </a>
+                    ${underneathMarkup}
+                  </li>
+                `;
+              })
+              .join("")}
+          </ol>
+        </section>
+      `;
+    })
+    .join("");
 }
 
 function renderCalendar(dates, selectedMonth, selectedDate) {
@@ -237,10 +245,10 @@ function renderCalendar(dates, selectedMonth, selectedDate) {
         : "";
 
     cells.push(`
-      <div class="calendar-day${outsideMonth ? " outside-month" : ""}${entry ? " has-event" : ""}${selectedDate === key ? " selected-date" : ""}" id="calendar-${key}">
+      <div class="calendar-day${outsideMonth ? " outside-month" : ""}${entry ? " has-event" : ""}" id="calendar-${key}">
         ${
           entry
-            ? `<a href="/dates?view=list&amp;month=${selectedMonth.key}&amp;date=${key}">
+            ? `<a href="/dates?view=calendar&amp;month=${selectedMonth.key}&amp;date=${key}" aria-label="Show details for ${escapeHtml(formatDate(key))}">
               <time datetime="${key}">${day.getUTCDate()}</time>
               <div class="calendar-event">
                 ${beside ? `<strong>${escapeHtml(beside)}</strong>` : ""}
@@ -268,7 +276,7 @@ function renderCalendar(dates, selectedMonth, selectedDate) {
           ? `<a href="/dates?view=calendar&amp;month=${previousMonth.key}" aria-label="Previous month">&larr;</a>`
           : `<span class="calendar-nav-disabled" aria-disabled="true">&larr;</span>`
       }
-      <a class="calendar-month-link" href="/dates?view=list&amp;month=${selectedMonth.key}" title="Show this month in list view">
+      <a class="calendar-month-link" href="/dates?view=list&amp;month=${selectedMonth.key}#month-${selectedMonth.key}" title="Show all dates, starting at this month">
         <h2>${escapeHtml(monthName)}</h2>
       </a>
       <a href="/dates?view=calendar&amp;month=${nextMonth.key}" aria-label="Next month">&rarr;</a>
@@ -281,6 +289,32 @@ function renderCalendar(dates, selectedMonth, selectedDate) {
         )
         .join("")}
       ${cells.join("")}
+    </div>
+    ${selectedDate ? renderEventDialog(datesByDay.get(selectedDate), selectedMonth) : ""}
+  `;
+}
+
+function renderEventDialog(event, selectedMonth) {
+  if (!event) {
+    return "";
+  }
+
+  const date = event.date;
+  const beside = typeof event.beside === "string" ? event.beside.trim() : "";
+  const underneath =
+    typeof event.underneath === "string" ? event.underneath.trim() : "";
+  const closeUrl = `/dates?view=calendar&amp;month=${selectedMonth.key}`;
+
+  return `
+    <div class="event-overlay">
+      <a class="event-backdrop" href="${closeUrl}" aria-label="Close event details"></a>
+      <section class="event-dialog" role="dialog" aria-modal="true" aria-labelledby="event-dialog-title" tabindex="-1">
+        <a class="event-dialog-close" href="${closeUrl}" aria-label="Close event details">&times;</a>
+        <p class="eyebrow">Upcoming meet-up</p>
+        <h2 id="event-dialog-title">${escapeHtml(formatDate(date))}</h2>
+        ${beside ? `<p class="event-dialog-beside">${escapeHtml(beside)}</p>` : ""}
+        ${underneath ? `<p>${escapeHtml(underneath)}</p>` : ""}
+      </section>
     </div>
   `;
 }
@@ -300,14 +334,14 @@ async function renderPage({
     const viewTabs = `
       <nav class="dates-view-tabs" aria-label="Dates view">
         <a class="${view === "calendar" ? "active" : ""}" href="/dates?view=calendar&amp;month=${month.key}">Calendar</a>
-        <a class="${view === "list" ? "active" : ""}" href="/dates?view=list&amp;month=${month.key}">List</a>
+        <a class="${view === "list" ? "active" : ""}" href="/dates?view=list&amp;month=${month.key}#month-${month.key}">All dates</a>
       </nav>
     `;
 
     content =
       viewTabs +
       (view === "list"
-        ? renderList(dates, month)
+        ? renderList(dates)
         : renderCalendar(dates, month, selectedDate));
   } else {
     content = `<p>Enter the password to see the upcoming dates.</p>
@@ -341,6 +375,7 @@ async function renderPage({
     .dates-list-month { margin: 0 0 12px; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
     .dates-list-month a { text-decoration: none; color: black;}
     .dates-list-month a:hover { color: var(--green); text-decoration: underline; text-underline-offset: 5px; }
+    .dates-month-group + .dates-month-group { margin-top: 42px; padding-top: 28px; border-top: 1px solid var(--line); }
     .calendar-toolbar { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; margin-bottom: 18px; text-align: center; }
     .calendar-toolbar > a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ink); border-radius: 50%; text-decoration: none; }
     .calendar-nav-disabled { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: #aaa69e; }
@@ -359,6 +394,18 @@ async function renderPage({
     .calendar-event { display: grid; gap: 4px; margin-top: 8px; padding: 8px; border-left: 3px solid #e7d2ef; background: #f7f3e9; color: var(--ink); }
     .calendar-event strong { color: var(--green); font-size: 12px; }
     .calendar-event span { font-size: 12px; line-height: 1.35; }
+    .event-overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; }
+    .event-backdrop { position: absolute; inset: 0; background: rgb(33 31 27 / 48%); backdrop-filter: blur(7px); }
+    .event-dialog { position: relative; z-index: 1; width: min(100%, 560px); padding: clamp(28px, 6vw, 48px); border: 1px solid var(--ink); background: var(--paper-light); box-shadow: 12px 14px 0 rgb(33 31 27 / 35%); animation: event-dialog-in 180ms ease-out; }
+    .event-dialog:focus { outline: 3px solid var(--blue); outline-offset: 4px; }
+    .event-dialog .eyebrow { margin-bottom: 14px; }
+    .event-dialog h2 { margin: 0 36px 16px 0; font-family: var(--serif); font-size: clamp(32px, 6vw, 48px); font-weight: 400; line-height: 1.1; }
+    .event-dialog p:last-child { margin-bottom: 0; color: var(--muted); line-height: 1.7; }
+    .event-dialog .event-dialog-beside { margin-bottom: 10px; color: var(--green); font-weight: 700; }
+    .event-dialog-close { position: absolute; top: 12px; right: 16px; color: var(--ink); font-size: 32px; line-height: 1; text-decoration: none; }
+    .event-dialog-close:hover { color: var(--green); }
+    @keyframes event-dialog-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    @media (prefers-reduced-motion: reduce) { .event-dialog { animation: none; } }
     @media (max-width: 600px) {
       .calendar-grid { grid-template-columns: repeat(7, minmax(42px, 1fr)); overflow-x: auto; }
       .calendar-day { min-height: 105px; padding: 5px; }
@@ -366,6 +413,7 @@ async function renderPage({
       .calendar-event { margin-top: 5px; padding: 5px; }
       .calendar-event strong, .calendar-event span { font-size: 9px; }
       .calendar-toolbar h2 { font-size: 22px; }
+      .event-overlay { padding: 16px; }
     }
     .password-form { display: grid; gap: 12px; max-width: 380px; }
     .password-form label { font-weight: 700; }
@@ -412,6 +460,20 @@ async function renderPage({
     </nav>
     <span class="footer-age">18+</span>
   </footer>
+  <script>
+    const eventDialog = document.querySelector(".event-dialog");
+    if (eventDialog) {
+      eventDialog.focus();
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          window.location.href = document.querySelector(".event-dialog-close").href;
+        } else if (event.key === "Tab") {
+          event.preventDefault();
+          document.querySelector(".event-dialog-close").focus();
+        }
+      });
+    }
+  </script>
 </body>
 </html>`;
 }
