@@ -336,7 +336,7 @@ async function renderPage({
     .date-update-beside { margin-left: 0.55rem; color: #587d43; font-weight: 700; }
     .date-update-underneath { margin: 0.35rem 0 0; color: #656158; }
     .dates-view-tabs { display: flex; gap: 8px; margin-bottom: 18px; color: black;}
-    .dates-view-tabs a { padding: 8px 16px; border: 1px solid var(--ink); border-radius: 999px; text-decoration: none; }
+    .dates-view-tabs a { padding: 8px 16px; border: 1px solid var(--ink); border-radius: 999px; text-decoration: none; color: black; }
     .dates-view-tabs a.active { background: var(--green); color: white; }
     .dates-list-month { margin: 0 0 12px; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
     .dates-list-month a { text-decoration: none; color: black;}
