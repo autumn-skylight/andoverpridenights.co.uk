@@ -143,8 +143,8 @@ function getDefaultMonth(dates) {
   const validDates = dates
     .filter((entry) => typeof entry.date === "string")
     .sort((left, right) => left.date.localeCompare(right.date));
-  const firstDate = validDates.find((entry) =>
-    entry.date >= EARLIEST_MONTH.key,
+  const firstDate = validDates.find(
+    (entry) => entry.date >= EARLIEST_MONTH.key,
   );
   return parseMonth(firstDate?.date.slice(0, 7) || EARLIEST_MONTH.key);
 }
@@ -155,9 +155,7 @@ function ensureMinimumMonth(selectedMonth) {
   }
 
   const selectedKey = `${selectedMonth.year}-${String(selectedMonth.month).padStart(2, "0")}`;
-  return selectedKey < EARLIEST_MONTH.key
-    ? EARLIEST_MONTH
-    : selectedMonth;
+  return selectedKey < EARLIEST_MONTH.key ? EARLIEST_MONTH : selectedMonth;
 }
 
 function renderList(dates, selectedMonth) {
@@ -187,8 +185,7 @@ function renderList(dates, selectedMonth) {
         .map(({ date, beside = "", underneath = "" }) => {
           const label = formatDate(date);
           const monthKey = date.slice(0, 7);
-          const besideText =
-            typeof beside === "string" ? beside.trim() : "";
+          const besideText = typeof beside === "string" ? beside.trim() : "";
           const underneathText =
             typeof underneath === "string" ? underneath.trim() : "";
           const besideMarkup = besideText
@@ -241,15 +238,17 @@ function renderCalendar(dates, selectedMonth, selectedDate) {
 
     cells.push(`
       <div class="calendar-day${outsideMonth ? " outside-month" : ""}${entry ? " has-event" : ""}${selectedDate === key ? " selected-date" : ""}" id="calendar-${key}">
-        ${entry
-          ? `<a href="/dates?view=list&amp;month=${selectedMonth.key}&amp;date=${key}">
+        ${
+          entry
+            ? `<a href="/dates?view=list&amp;month=${selectedMonth.key}&amp;date=${key}">
               <time datetime="${key}">${day.getUTCDate()}</time>
               <div class="calendar-event">
                 ${beside ? `<strong>${escapeHtml(beside)}</strong>` : ""}
                 ${underneath ? `<span>${escapeHtml(underneath)}</span>` : ""}
               </div>
             </a>`
-          : `<time datetime="${key}">${day.getUTCDate()}</time>`}
+            : `<time datetime="${key}">${day.getUTCDate()}</time>`
+        }
       </div>
     `);
   }
@@ -264,9 +263,11 @@ function renderCalendar(dates, selectedMonth, selectedDate) {
 
   return `
     <div class="calendar-toolbar">
-      ${canGoBack
-        ? `<a href="/dates?view=calendar&amp;month=${previousMonth.key}" aria-label="Previous month">&larr;</a>`
-        : `<span class="calendar-nav-disabled" aria-disabled="true">&larr;</span>`}
+      ${
+        canGoBack
+          ? `<a href="/dates?view=calendar&amp;month=${previousMonth.key}" aria-label="Previous month">&larr;</a>`
+          : `<span class="calendar-nav-disabled" aria-disabled="true">&larr;</span>`
+      }
       <a class="calendar-month-link" href="/dates?view=list&amp;month=${selectedMonth.key}" title="Show this month in list view">
         <h2>${escapeHtml(monthName)}</h2>
       </a>
@@ -274,7 +275,10 @@ function renderCalendar(dates, selectedMonth, selectedDate) {
     </div>
     <div class="calendar-grid" role="table" aria-label="${escapeHtml(monthName)}">
       ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        .map((day) => `<div class="calendar-weekday" role="columnheader">${day}</div>`)
+        .map(
+          (day) =>
+            `<div class="calendar-weekday" role="columnheader">${day}</div>`,
+        )
         .join("")}
       ${cells.join("")}
     </div>
@@ -300,11 +304,11 @@ async function renderPage({
       </nav>
     `;
 
-    content = viewTabs + (
-      view === "list"
+    content =
+      viewTabs +
+      (view === "list"
         ? renderList(dates, month)
-        : renderCalendar(dates, month, selectedDate)
-    );
+        : renderCalendar(dates, month, selectedDate));
   } else {
     content = `<p>Enter the password to see the upcoming dates.</p>
         <form class="password-form" method="post" action="/dates">
@@ -335,13 +339,13 @@ async function renderPage({
     .dates-view-tabs a { padding: 8px 16px; border: 1px solid var(--ink); border-radius: 999px; text-decoration: none; }
     .dates-view-tabs a.active { background: var(--green); color: white; }
     .dates-list-month { margin: 0 0 12px; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
-    .dates-list-month a { text-decoration: none; }
+    .dates-list-month a { text-decoration: none; color: black;}
     .dates-list-month a:hover { color: var(--green); text-decoration: underline; text-underline-offset: 5px; }
     .calendar-toolbar { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; margin-bottom: 18px; text-align: center; }
     .calendar-toolbar > a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ink); border-radius: 50%; text-decoration: none; }
     .calendar-nav-disabled { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: #aaa69e; }
     .calendar-toolbar > a:hover { background: var(--ink); color: white; }
-    .calendar-toolbar .calendar-month-link { width: auto; height: auto; border: 0; border-radius: 0; }
+    .calendar-toolbar .calendar-month-link { width: auto; height: auto; border: 0; border-radius: 0; colour:  black; }
     .calendar-toolbar .calendar-month-link:hover { background: transparent; color: var(--green); }
     .calendar-toolbar h2 { margin: 0; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: var(--paper-light); }
@@ -442,8 +446,7 @@ module.exports = async (req, res) => {
 
     try {
       const dates = await loadDates();
-      const view =
-        req.query && req.query.view === "list" ? "list" : "calendar";
+      const view = req.query && req.query.view === "list" ? "list" : "calendar";
       const requestedMonth =
         req.query && typeof req.query.month === "string"
           ? parseMonth(req.query.month)
@@ -451,9 +454,7 @@ module.exports = async (req, res) => {
       const selectedMonth =
         ensureMinimumMonth(requestedMonth) || getDefaultMonth(dates);
       const selectedDate =
-        req.query && typeof req.query.date === "string"
-          ? req.query.date
-          : "";
+        req.query && typeof req.query.date === "string" ? req.query.date : "";
 
       res.status(200).send(
         await renderPage({
