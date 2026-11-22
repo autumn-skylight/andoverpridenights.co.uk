@@ -1,8 +1,10 @@
 const { createHash, createHmac, timingSafeEqual } = require("node:crypto");
-const dates = require("https://api.andoverpridenights.co.uk/dates.json");
 
 const SESSION_COOKIE = "dates_session";
 const SESSION_DURATION_SECONDS = 8 * 60 * 60;
+const DATES_URL =
+  process.env.DATES_JSON_URL ||
+  "https://api.andoverpridenights.co.uk/dates.json";
 
 function signSession(expiresAt, secret) {
   return createHmac("sha256", secret)
@@ -76,26 +78,58 @@ function escapeHtml(value) {
   );
 }
 
-function renderPage({ authenticated, error = "" }) {
+async function loadDates() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch(DATES_URL, {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Dates API returned HTTP ${response.status}.`);
+    }
+
+    const dates = await response.json();
+
+    if (!Array.isArray(dates)) {
+      throw new Error("Dates API did not return a JSON array.");
+    }
+
+    return dates;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function renderPage({ authenticated, error = "", dates = [] }) {
   const content = authenticated
     ? `<p>Our next monthly meet-ups:</p>
-        <ol class="dates-list">${[...dates]
-          .sort((left, right) => left.date.localeCompare(right.date))
-          .map(({ date, beside = "", underneath = "" }) => {
-            const label = formatDate(date);
-            const besideText = typeof beside === "string" ? beside.trim() : "";
-            const underneathText =
-              typeof underneath === "string" ? underneath.trim() : "";
-            const besideMarkup = besideText
-              ? `<span class="date-update-beside">${escapeHtml(besideText)}</span>`
-              : "";
-            const underneathMarkup = underneathText
-              ? `<p class="date-update-underneath">${escapeHtml(underneathText)}</p>`
-              : "";
+        ${dates.length
+          ? `<ol class="dates-list">${[...dates]
+              .sort((left, right) =>
+                String(left.date).localeCompare(String(right.date)),
+              )
+              .map(({ date, beside = "", underneath = "" }) => {
+                const label = formatDate(date);
+                const besideText =
+                  typeof beside === "string" ? beside.trim() : "";
+                const underneathText =
+                  typeof underneath === "string" ? underneath.trim() : "";
+                const besideMarkup = besideText
+                  ? `<span class="date-update-beside">${escapeHtml(besideText)}</span>`
+                  : "";
+                const underneathMarkup = underneathText
+                  ? `<p class="date-update-underneath">${escapeHtml(underneathText)}</p>`
+                  : "";
 
-            return `<li><strong>${label}</strong>${besideMarkup}${underneathMarkup}</li>`;
-          })
-          .join("")}</ol>`
+                return `<li><strong>${label}</strong>${besideMarkup}${underneathMarkup}</li>`;
+              })
+              .join("")}</ol>`
+          : `<p>No dates have been published yet.</p>`}`
     : `<p>Enter the password to see the upcoming dates.</p>
         <form class="password-form" method="post" action="/dates">
           <label for="password">Password</label>
@@ -148,7 +182,7 @@ function setSecurityHeaders(res) {
   res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
 }
 
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   setSecurityHeaders(res);
 
   const password = process.env.DATES_PAGE_PASSWORD;
@@ -164,9 +198,23 @@ module.exports = (req, res) => {
   }
 
   if (req.method === "GET") {
-    res
-      .status(200)
-      .send(renderPage({ authenticated: hasValidSession(req, sessionSecret) }));
+    if (!hasValidSession(req, sessionSecret)) {
+      res
+        .status(200)
+        .send(await renderPage({ authenticated: false }));
+      return;
+    }
+
+    try {
+      const dates = await loadDates();
+      res
+        .status(200)
+        .send(await renderPage({ authenticated: true, dates }));
+    } catch (error) {
+      res
+        .status(502)
+        .send(`Could not load dates: ${error.message}`);
+    }
     return;
   }
 
@@ -178,7 +226,7 @@ module.exports = (req, res) => {
 
     if (!isEqual(submittedPassword, password)) {
       res.status(401).send(
-        renderPage({
+        await renderPage({
           authenticated: false,
           error: "That password was not recognised. Please try again.",
         }),

@@ -13,7 +13,7 @@ The dates are not returned until a visitor enters the password. Login sessions e
 
 ### Managing dates
 
-Edit `dates.json` to change the dates or notes. Each entry controls one date:
+Edit `dates.json` in the API repository to change the dates or notes. The live API file is https://api.andoverpridenights.co.uk/dates.json. Each entry controls one date:
 
 ```json
 {
