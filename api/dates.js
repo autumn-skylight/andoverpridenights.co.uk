@@ -160,7 +160,7 @@ async function renderPage({ authenticated, error = "", dates = [] }) {
     .password-form .button { width: max-content; border: 0; cursor: pointer; }
     .form-error { min-height: 1.5em; margin: 0; color: #a3312c; }
 .legal-subheading {
-    font-size: 2em;
+    font-size: 1.5em;
     text-align: center;
   }
 
