@@ -3,6 +3,10 @@
     {
       "source": "/dates",
       "destination": "/api/dates"
+    },
+    {
+      "source": "/dates-calendar",
+      "destination": "/api/dates-calendar"
     }
   ]
 }
