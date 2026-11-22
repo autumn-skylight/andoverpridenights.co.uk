@@ -188,6 +188,17 @@ async function renderPage({ authenticated, error = "", dates = [] }) {
 <p class="legal-subheading"> check out Upcoming dates & any changes </p>
     <section class="legal-copy" aria-label="Upcoming dates/changes">${content}</section>
   </main>
+<footer class="site-footer legal-footer">
+    <a class="footer-brand" href="../index.html"><img class="footer-logo"
+        src="https://assets.andoverpridenights.co.uk/images/logos/andover-pride-nights-logo.png"
+        alt="Andover's Pride Nights"></a>
+    <p>A welcoming, inclusive space to connect in Andover.</p>
+    <nav class="footer-links" aria-label="Legal">
+      <a href="terms.html">Terms &amp; conditions</a>
+      <a href="privacy-policy.html">Privacy policy</a>
+    </nav>
+    <span class="footer-age">18+</span>
+  </footer>
 </body>
 </html>`;
 }
