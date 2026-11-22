@@ -185,7 +185,7 @@ async function renderPage({ authenticated, error = "", dates = [] }) {
   <main class="legal-main">
     <a class="legal-back" href="/">← Back to home</a>
     <h1 class="legal-heading">Dates</h1>
-<p class="legal-subheading"> check out Upcoming dates & any changes </p>
+<p class="legal-subheading"> check out Upcoming dates & updates </p>
     <section class="legal-copy" aria-label="Upcoming dates/changes">${content}</section>
   </main>
 <footer class="site-footer legal-footer">
