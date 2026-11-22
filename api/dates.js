@@ -1,5 +1,5 @@
 const { createHash, createHmac, timingSafeEqual } = require("node:crypto");
-const dates = require("../dates.json");
+const dates = require("https://api.andoverpridenights.co.uk/dates.json");
 
 const SESSION_COOKIE = "dates_session";
 const SESSION_DURATION_SECONDS = 8 * 60 * 60;
