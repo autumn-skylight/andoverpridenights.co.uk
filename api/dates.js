@@ -276,7 +276,7 @@ function renderCalendar(dates, selectedMonth, selectedDate) {
           ? `<a href="/dates?view=calendar&amp;month=${previousMonth.key}" aria-label="Previous month">&larr;</a>`
           : `<span class="calendar-nav-disabled" aria-disabled="true">&larr;</span>`
       }
-      <a class="calendar-month-link" href="/dates?view=list&amp;month=${selectedMonth.key}#month-${selectedMonth.key}" title="Show all dates, starting at this month">
+      <!--<a class="calendar-month-link" href="/dates?view=list&amp;month=${selectedMonth.key}#month-${selectedMonth.key}" title="Show all dates, starting at this month"> -->
         <h2>${escapeHtml(monthName)}</h2>
       </a>
       <a href="/dates?view=calendar&amp;month=${nextMonth.key}" aria-label="Next month">&rarr;</a>
