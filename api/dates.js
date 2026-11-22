@@ -108,28 +108,30 @@ async function loadDates() {
 async function renderPage({ authenticated, error = "", dates = [] }) {
   const content = authenticated
     ? `<p>Our next monthly meet-ups:</p>
-        ${dates.length
-          ? `<ol class="dates-list">${[...dates]
-              .sort((left, right) =>
-                String(left.date).localeCompare(String(right.date)),
-              )
-              .map(({ date, beside = "", underneath = "" }) => {
-                const label = formatDate(date);
-                const besideText =
-                  typeof beside === "string" ? beside.trim() : "";
-                const underneathText =
-                  typeof underneath === "string" ? underneath.trim() : "";
-                const besideMarkup = besideText
-                  ? `<span class="date-update-beside">${escapeHtml(besideText)}</span>`
-                  : "";
-                const underneathMarkup = underneathText
-                  ? `<p class="date-update-underneath">${escapeHtml(underneathText)}</p>`
-                  : "";
+        ${
+          dates.length
+            ? `<ol class="dates-list">${[...dates]
+                .sort((left, right) =>
+                  String(left.date).localeCompare(String(right.date)),
+                )
+                .map(({ date, beside = "", underneath = "" }) => {
+                  const label = formatDate(date);
+                  const besideText =
+                    typeof beside === "string" ? beside.trim() : "";
+                  const underneathText =
+                    typeof underneath === "string" ? underneath.trim() : "";
+                  const besideMarkup = besideText
+                    ? `<span class="date-update-beside">${escapeHtml(besideText)}</span>`
+                    : "";
+                  const underneathMarkup = underneathText
+                    ? `<p class="date-update-underneath">${escapeHtml(underneathText)}</p>`
+                    : "";
 
-                return `<li><strong>${label}</strong>${besideMarkup}${underneathMarkup}</li>`;
-              })
-              .join("")}</ol>`
-          : `<p>No dates have been published yet.</p>`}`
+                  return `<li><strong>${label}</strong>${besideMarkup}${underneathMarkup}</li>`;
+                })
+                .join("")}</ol>`
+            : `<p>No dates have been published yet.</p>`
+        }`
     : `<p>Enter the password to see the upcoming dates.</p>
         <form class="password-form" method="post" action="/dates">
           <label for="password">Password</label>
@@ -157,6 +159,11 @@ async function renderPage({ authenticated, error = "", dates = [] }) {
     .password-form input { min-height: 46px; padding: 11px 12px; border: 1px solid #c9c3b7; border-radius: 2em; font: inherit; }
     .password-form .button { width: max-content; border: 0; cursor: pointer; }
     .form-error { min-height: 1.5em; margin: 0; color: #a3312c; }
+p {
+    font-size: 4em;
+    text-align: center;
+  }
+
   </style>
 </head>
 <body class="legal-page">
@@ -199,21 +206,15 @@ module.exports = async (req, res) => {
 
   if (req.method === "GET") {
     if (!hasValidSession(req, sessionSecret)) {
-      res
-        .status(200)
-        .send(await renderPage({ authenticated: false }));
+      res.status(200).send(await renderPage({ authenticated: false }));
       return;
     }
 
     try {
       const dates = await loadDates();
-      res
-        .status(200)
-        .send(await renderPage({ authenticated: true, dates }));
+      res.status(200).send(await renderPage({ authenticated: true, dates }));
     } catch (error) {
-      res
-        .status(502)
-        .send(`Could not load dates: ${error.message}`);
+      res.status(502).send(`Could not load dates: ${error.message}`);
     }
     return;
   }
