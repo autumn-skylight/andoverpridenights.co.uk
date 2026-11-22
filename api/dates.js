@@ -5,6 +5,7 @@ const SESSION_DURATION_SECONDS = 8 * 60 * 60;
 const DATES_URL =
   process.env.DATES_JSON_URL ||
   "https://api.andoverpridenights.co.uk/dates.json";
+const EARLIEST_MONTH = { year: 2026, month: 12, key: "2026-12" };
 
 function signSession(expiresAt, secret) {
   return createHmac("sha256", secret)
@@ -139,12 +140,24 @@ function formatMonth(year, month) {
 }
 
 function getDefaultMonth(dates) {
-  const today = new Date().toISOString().slice(0, 10);
   const validDates = dates
     .filter((entry) => typeof entry.date === "string")
     .sort((left, right) => left.date.localeCompare(right.date));
-  const nextDate = validDates.find((entry) => entry.date >= today);
-  return parseMonth((nextDate || validDates[0])?.date.slice(0, 7) || "2026-12");
+  const firstDate = validDates.find((entry) =>
+    entry.date >= EARLIEST_MONTH.key,
+  );
+  return parseMonth(firstDate?.date.slice(0, 7) || EARLIEST_MONTH.key);
+}
+
+function ensureMinimumMonth(selectedMonth) {
+  if (!selectedMonth) {
+    return null;
+  }
+
+  const selectedKey = `${selectedMonth.year}-${String(selectedMonth.month).padStart(2, "0")}`;
+  return selectedKey < EARLIEST_MONTH.key
+    ? EARLIEST_MONTH
+    : selectedMonth;
 }
 
 function renderList(dates, selectedMonth) {
@@ -244,10 +257,16 @@ function renderCalendar(dates, selectedMonth, selectedDate) {
   const previousMonth = shiftMonth(selectedMonth, -1);
   const nextMonth = shiftMonth(selectedMonth, 1);
   const monthName = formatMonth(year, month);
+  const canGoBack =
+    selectedMonth.year > EARLIEST_MONTH.year ||
+    (selectedMonth.year === EARLIEST_MONTH.year &&
+      selectedMonth.month > EARLIEST_MONTH.month);
 
   return `
     <div class="calendar-toolbar">
-      <a href="/dates?view=calendar&amp;month=${previousMonth.key}" aria-label="Previous month">&larr;</a>
+      ${canGoBack
+        ? `<a href="/dates?view=calendar&amp;month=${previousMonth.key}" aria-label="Previous month">&larr;</a>`
+        : `<span class="calendar-nav-disabled" aria-disabled="true">&larr;</span>`}
       <a class="calendar-month-link" href="/dates?view=list&amp;month=${selectedMonth.key}" title="Show this month in list view">
         <h2>${escapeHtml(monthName)}</h2>
       </a>
@@ -320,6 +339,7 @@ async function renderPage({
     .dates-list-month a:hover { color: var(--green); text-decoration: underline; text-underline-offset: 5px; }
     .calendar-toolbar { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; margin-bottom: 18px; text-align: center; }
     .calendar-toolbar > a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ink); border-radius: 50%; text-decoration: none; }
+    .calendar-nav-disabled { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: #aaa69e; }
     .calendar-toolbar > a:hover { background: var(--ink); color: white; }
     .calendar-toolbar .calendar-month-link { width: auto; height: auto; border: 0; border-radius: 0; }
     .calendar-toolbar .calendar-month-link:hover { background: transparent; color: var(--green); }
@@ -428,7 +448,8 @@ module.exports = async (req, res) => {
         req.query && typeof req.query.month === "string"
           ? parseMonth(req.query.month)
           : null;
-      const selectedMonth = requestedMonth || getDefaultMonth(dates);
+      const selectedMonth =
+        ensureMinimumMonth(requestedMonth) || getDefaultMonth(dates);
       const selectedDate =
         req.query && typeof req.query.date === "string"
           ? req.query.date
