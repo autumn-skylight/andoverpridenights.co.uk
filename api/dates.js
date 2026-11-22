@@ -394,7 +394,7 @@ async function renderPage({
     .calendar-event { display: grid; gap: 4px; margin-top: 8px; padding: 8px; border-left: 3px solid #e7d2ef; background: #f7f3e9; color: var(--ink); }
     .calendar-event strong { color: var(--green); font-size: 12px; }
     .calendar-event span { font-size: 12px; line-height: 1.35; }
-    .event-overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; }
+    .event-overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; border-radius: 3px solid black}
     .event-backdrop { position: absolute; inset: 0; background: rgb(33 31 27 / 48%); backdrop-filter: blur(7px); }
     .event-dialog { position: relative; z-index: 1; width: min(100%, 560px); padding: clamp(28px, 6vw, 48px); border: 1px solid var(--ink); background: var(--paper-light); box-shadow: 12px 14px 0 rgb(33 31 27 / 35%); animation: event-dialog-in 180ms ease-out; }
     .event-dialog:focus { outline: 3px solid var(--blue); outline-offset: 4px; }
