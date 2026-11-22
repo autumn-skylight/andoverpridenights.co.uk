@@ -377,7 +377,7 @@ async function renderPage({
     .dates-list-month a:hover { color: var(--green); text-decoration: underline; text-underline-offset: 5px; }
     .dates-month-group + .dates-month-group { margin-top: 42px; padding-top: 28px; border-top: 1px solid var(--line); }
     .calendar-toolbar { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; margin-bottom: 18px; text-align: center; }
-    .calendar-toolbar > a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ink); border-radius: 50%; text-decoration: none; }
+    .calendar-toolbar > a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ink); border-radius: 50%; color: var(--ink); text-decoration: none; }
     .calendar-nav-disabled { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: #aaa69e; }
     .calendar-toolbar > a:hover { background: var(--ink); color: white; }
     .calendar-toolbar .calendar-month-link { width: auto; height: auto; border: 0; border-radius: 0; color:  black; }
@@ -389,15 +389,14 @@ async function renderPage({
     .calendar-day a { display: block; min-height: 115px; color: inherit; text-decoration: none; }
     .calendar-day time { display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; }
     .calendar-day.has-event time { background: var(--green); color: white; font-weight: 700; }
-    .calendar-day.selected-date { outline: 3px solid var(--blue); outline-offset: -3px; }
     .calendar-day.outside-month { background: #efede6; color: #aaa69e; }
     .calendar-event { display: grid; gap: 4px; margin-top: 8px; padding: 8px; border-left: 3px solid #e7d2ef; background: #f7f3e9; color: var(--ink); }
     .calendar-event strong { color: var(--green); font-size: 12px; }
     .calendar-event span { font-size: 12px; line-height: 1.35; }
-    .event-overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; border-radius: 3px solid black}
+    .event-overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; }
     .event-backdrop { position: absolute; inset: 0; background: rgb(33 31 27 / 48%); backdrop-filter: blur(7px); }
     .event-dialog { position: relative; z-index: 1; width: min(100%, 560px); padding: clamp(28px, 6vw, 48px); border: 1px solid var(--ink); background: var(--paper-light); box-shadow: 12px 14px 0 rgb(33 31 27 / 35%); animation: event-dialog-in 180ms ease-out; }
-    .event-dialog:focus { outline: 3px solid var(--blue); outline-offset: 4px; }
+    .event-dialog:focus { outline: none; }
     .event-dialog .eyebrow { margin-bottom: 14px; }
     .event-dialog h2 { margin: 0 36px 16px 0; font-family: var(--serif); font-size: clamp(32px, 6vw, 48px); font-weight: 400; line-height: 1.1; }
     .event-dialog p:last-child { margin-bottom: 0; color: var(--muted); line-height: 1.7; }
