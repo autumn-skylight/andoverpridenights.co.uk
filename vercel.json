@@ -3,10 +3,13 @@
     {
       "source": "/dates",
       "destination": "/api/dates"
-    },
+    }
+  ],
+  "redirects": [
     {
       "source": "/dates-calendar",
-      "destination": "/api/dates-calendar"
+      "destination": "/dates",
+      "permanent": false
     }
   ]
 }

@@ -105,40 +105,196 @@ async function loadDates() {
   }
 }
 
-async function renderPage({ authenticated, error = "", dates = [] }) {
-  const content = authenticated
-    ? `<p>Our next monthly meet-ups:</p>
-        ${
-          dates.length
-            ? `<ol class="dates-list">${[...dates]
-                .sort((left, right) =>
-                  String(left.date).localeCompare(String(right.date)),
-                )
-                .map(({ date, beside = "", underneath = "" }) => {
-                  const label = formatDate(date);
-                  const besideText =
-                    typeof beside === "string" ? beside.trim() : "";
-                  const underneathText =
-                    typeof underneath === "string" ? underneath.trim() : "";
-                  const besideMarkup = besideText
-                    ? `<span class="date-update-beside">${escapeHtml(besideText)}</span>`
-                    : "";
-                  const underneathMarkup = underneathText
-                    ? `<p class="date-update-underneath">${escapeHtml(underneathText)}</p>`
-                    : "";
+function parseMonth(value) {
+  if (!/^\d{4}-\d{2}$/.test(value || "")) {
+    return null;
+  }
 
-                  return `<li><strong>${label}</strong>${besideMarkup}${underneathMarkup}</li>`;
-                })
-                .join("")}</ol>`
-            : `<p>No dates have been published yet.</p>`
-        }`
-    : `<p>Enter the password to see the upcoming dates.</p>
+  const [year, month] = value.split("-").map(Number);
+  if (month < 1 || month > 12) {
+    return null;
+  }
+
+  return { year, month, key: `${year}-${String(month).padStart(2, "0")}` };
+}
+
+function shiftMonth(selectedMonth, amount) {
+  const date = new Date(
+    Date.UTC(selectedMonth.year, selectedMonth.month - 1 + amount, 1),
+  );
+
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    key: `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`,
+  };
+}
+
+function formatMonth(year, month) {
+  return new Intl.DateTimeFormat("en-GB", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, 1)));
+}
+
+function getDefaultMonth(dates) {
+  const today = new Date().toISOString().slice(0, 10);
+  const validDates = dates
+    .filter((entry) => typeof entry.date === "string")
+    .sort((left, right) => left.date.localeCompare(right.date));
+  const nextDate = validDates.find((entry) => entry.date >= today);
+  return parseMonth((nextDate || validDates[0])?.date.slice(0, 7) || "2026-12");
+}
+
+function renderList(dates, selectedMonth) {
+  if (!dates.length) {
+    return `<p>No dates have been published yet.</p>`;
+  }
+
+  const sortedDates = [...dates].sort((left, right) =>
+    String(left.date).localeCompare(String(right.date)),
+  );
+  const filteredDates = selectedMonth
+    ? sortedDates.filter((entry) => entry.date.startsWith(selectedMonth.key))
+    : sortedDates;
+
+  if (!filteredDates.length) {
+    return `<p>No meet-ups are listed for ${escapeHtml(formatMonth(selectedMonth.year, selectedMonth.month))}.</p>`;
+  }
+
+  return `
+    <h2 class="dates-list-month">
+      <a href="/dates?view=calendar&amp;month=${selectedMonth.key}">
+        ${escapeHtml(formatMonth(selectedMonth.year, selectedMonth.month))}
+      </a>
+    </h2>
+    <ol class="dates-list">
+      ${filteredDates
+        .map(({ date, beside = "", underneath = "" }) => {
+          const label = formatDate(date);
+          const monthKey = date.slice(0, 7);
+          const besideText =
+            typeof beside === "string" ? beside.trim() : "";
+          const underneathText =
+            typeof underneath === "string" ? underneath.trim() : "";
+          const besideMarkup = besideText
+            ? `<span class="date-update-beside">${escapeHtml(besideText)}</span>`
+            : "";
+          const underneathMarkup = underneathText
+            ? `<p class="date-update-underneath">${escapeHtml(underneathText)}</p>`
+            : "";
+
+          return `
+            <li id="date-${escapeHtml(date)}">
+              <a class="date-link" href="/dates?view=calendar&amp;month=${monthKey}&amp;date=${escapeHtml(date)}">
+                <strong>${label}</strong>${besideMarkup}
+              </a>
+              ${underneathMarkup}
+            </li>
+          `;
+        })
+        .join("")}
+    </ol>
+  `;
+}
+
+function renderCalendar(dates, selectedMonth, selectedDate) {
+  const year = selectedMonth.year;
+  const month = selectedMonth.month;
+  const firstDay = new Date(Date.UTC(year, month - 1, 1));
+  const startingOffset = (firstDay.getUTCDay() + 6) % 7;
+  const gridStart = new Date(firstDay);
+  gridStart.setUTCDate(gridStart.getUTCDate() - startingOffset);
+  const datesByDay = new Map(
+    dates
+      .filter((entry) => typeof entry.date === "string")
+      .map((entry) => [entry.date, entry]),
+  );
+
+  const cells = [];
+  for (let index = 0; index < 42; index += 1) {
+    const day = new Date(gridStart);
+    day.setUTCDate(gridStart.getUTCDate() + index);
+    const key = day.toISOString().slice(0, 10);
+    const outsideMonth = day.getUTCMonth() + 1 !== month;
+    const entry = datesByDay.get(key);
+    const beside =
+      entry && typeof entry.beside === "string" ? entry.beside.trim() : "";
+    const underneath =
+      entry && typeof entry.underneath === "string"
+        ? entry.underneath.trim()
+        : "";
+
+    cells.push(`
+      <div class="calendar-day${outsideMonth ? " outside-month" : ""}${entry ? " has-event" : ""}${selectedDate === key ? " selected-date" : ""}" id="calendar-${key}">
+        ${entry
+          ? `<a href="/dates?view=list&amp;month=${selectedMonth.key}&amp;date=${key}">
+              <time datetime="${key}">${day.getUTCDate()}</time>
+              <div class="calendar-event">
+                ${beside ? `<strong>${escapeHtml(beside)}</strong>` : ""}
+                ${underneath ? `<span>${escapeHtml(underneath)}</span>` : ""}
+              </div>
+            </a>`
+          : `<time datetime="${key}">${day.getUTCDate()}</time>`}
+      </div>
+    `);
+  }
+
+  const previousMonth = shiftMonth(selectedMonth, -1);
+  const nextMonth = shiftMonth(selectedMonth, 1);
+  const monthName = formatMonth(year, month);
+
+  return `
+    <div class="calendar-toolbar">
+      <a href="/dates?view=calendar&amp;month=${previousMonth.key}" aria-label="Previous month">&larr;</a>
+      <a class="calendar-month-link" href="/dates?view=list&amp;month=${selectedMonth.key}" title="Show this month in list view">
+        <h2>${escapeHtml(monthName)}</h2>
+      </a>
+      <a href="/dates?view=calendar&amp;month=${nextMonth.key}" aria-label="Next month">&rarr;</a>
+    </div>
+    <div class="calendar-grid" role="table" aria-label="${escapeHtml(monthName)}">
+      ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        .map((day) => `<div class="calendar-weekday" role="columnheader">${day}</div>`)
+        .join("")}
+      ${cells.join("")}
+    </div>
+  `;
+}
+
+async function renderPage({
+  authenticated,
+  error = "",
+  dates = [],
+  view = "calendar",
+  selectedMonth = null,
+  selectedDate = "",
+}) {
+  let content;
+
+  if (authenticated) {
+    const month = selectedMonth || getDefaultMonth(dates);
+    const viewTabs = `
+      <nav class="dates-view-tabs" aria-label="Dates view">
+        <a class="${view === "calendar" ? "active" : ""}" href="/dates?view=calendar&amp;month=${month.key}">Calendar</a>
+        <a class="${view === "list" ? "active" : ""}" href="/dates?view=list&amp;month=${month.key}">List</a>
+      </nav>
+    `;
+
+    content = viewTabs + (
+      view === "list"
+        ? renderList(dates, month)
+        : renderCalendar(dates, month, selectedDate)
+    );
+  } else {
+    content = `<p>Enter the password to see the upcoming dates.</p>
         <form class="password-form" method="post" action="/dates">
           <label for="password">Password</label>
           <input id="password" name="password" type="password" autocomplete="current-password" required>
           <button class="button button-primary" type="submit">Show dates</button>
           <p class="form-error" role="alert">${error}</p>
         </form>`;
+  }
 
   return `<!doctype html>
 <html lang="en-GB">
@@ -152,8 +308,41 @@ async function renderPage({ authenticated, error = "", dates = [] }) {
   <style>
     .dates-list { padding-left: 1.4rem; }
     .dates-list li { margin: 0.9rem 0; color: #514f48; }
+    .date-link { color: var(--ink); text-decoration: none; }
+    .date-link:hover strong { color: var(--green); text-decoration: underline; text-underline-offset: 4px; }
     .date-update-beside { margin-left: 0.55rem; color: #587d43; font-weight: 700; }
     .date-update-underneath { margin: 0.35rem 0 0; color: #656158; }
+    .dates-view-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .dates-view-tabs a { padding: 8px 16px; border: 1px solid var(--ink); border-radius: 999px; text-decoration: none; }
+    .dates-view-tabs a.active { background: var(--green); color: white; }
+    .dates-list-month { margin: 0 0 12px; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
+    .dates-list-month a { text-decoration: none; }
+    .dates-list-month a:hover { color: var(--green); text-decoration: underline; text-underline-offset: 5px; }
+    .calendar-toolbar { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; margin-bottom: 18px; text-align: center; }
+    .calendar-toolbar > a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ink); border-radius: 50%; text-decoration: none; }
+    .calendar-toolbar > a:hover { background: var(--ink); color: white; }
+    .calendar-toolbar .calendar-month-link { width: auto; height: auto; border: 0; border-radius: 0; }
+    .calendar-toolbar .calendar-month-link:hover { background: transparent; color: var(--green); }
+    .calendar-toolbar h2 { margin: 0; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: var(--paper-light); }
+    .calendar-weekday { min-height: 42px; padding: 12px 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 700; text-align: center; text-transform: uppercase; }
+    .calendar-day { min-height: 132px; padding: 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 13px; }
+    .calendar-day a { display: block; min-height: 115px; color: inherit; text-decoration: none; }
+    .calendar-day time { display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; }
+    .calendar-day.has-event time { background: var(--green); color: white; font-weight: 700; }
+    .calendar-day.selected-date { outline: 3px solid var(--blue); outline-offset: -3px; }
+    .calendar-day.outside-month { background: #efede6; color: #aaa69e; }
+    .calendar-event { display: grid; gap: 4px; margin-top: 8px; padding: 8px; border-left: 3px solid #e7d2ef; background: #f7f3e9; color: var(--ink); }
+    .calendar-event strong { color: var(--green); font-size: 12px; }
+    .calendar-event span { font-size: 12px; line-height: 1.35; }
+    @media (max-width: 600px) {
+      .calendar-grid { grid-template-columns: repeat(7, minmax(42px, 1fr)); overflow-x: auto; }
+      .calendar-day { min-height: 105px; padding: 5px; }
+      .calendar-day a { min-height: 95px; }
+      .calendar-event { margin-top: 5px; padding: 5px; }
+      .calendar-event strong, .calendar-event span { font-size: 9px; }
+      .calendar-toolbar h2 { font-size: 22px; }
+    }
     .password-form { display: grid; gap: 12px; max-width: 380px; }
     .password-form label { font-weight: 700; }
     .password-form input { min-height: 46px; padding: 11px 12px; border: 1px solid #c9c3b7; border-radius: 2em; font: inherit; }
@@ -233,7 +422,27 @@ module.exports = async (req, res) => {
 
     try {
       const dates = await loadDates();
-      res.status(200).send(await renderPage({ authenticated: true, dates }));
+      const view =
+        req.query && req.query.view === "list" ? "list" : "calendar";
+      const requestedMonth =
+        req.query && typeof req.query.month === "string"
+          ? parseMonth(req.query.month)
+          : null;
+      const selectedMonth = requestedMonth || getDefaultMonth(dates);
+      const selectedDate =
+        req.query && typeof req.query.date === "string"
+          ? req.query.date
+          : "";
+
+      res.status(200).send(
+        await renderPage({
+          authenticated: true,
+          dates,
+          view,
+          selectedMonth,
+          selectedDate,
+        }),
+      );
     } catch (error) {
       res.status(502).send(`Could not load dates: ${error.message}`);
     }
