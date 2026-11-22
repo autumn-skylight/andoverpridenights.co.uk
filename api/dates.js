@@ -335,7 +335,7 @@ async function renderPage({
     .date-link:hover strong { color: var(--green); text-decoration: underline; text-underline-offset: 4px; }
     .date-update-beside { margin-left: 0.55rem; color: #587d43; font-weight: 700; }
     .date-update-underneath { margin: 0.35rem 0 0; color: #656158; }
-    .dates-view-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .dates-view-tabs { display: flex; gap: 8px; margin-bottom: 18px; color: black;}
     .dates-view-tabs a { padding: 8px 16px; border: 1px solid var(--ink); border-radius: 999px; text-decoration: none; }
     .dates-view-tabs a.active { background: var(--green); color: white; }
     .dates-list-month { margin: 0 0 12px; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
@@ -345,7 +345,7 @@ async function renderPage({
     .calendar-toolbar > a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ink); border-radius: 50%; text-decoration: none; }
     .calendar-nav-disabled { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: #aaa69e; }
     .calendar-toolbar > a:hover { background: var(--ink); color: white; }
-    .calendar-toolbar .calendar-month-link { width: auto; height: auto; border: 0; border-radius: 0; colour:  black; }
+    .calendar-toolbar .calendar-month-link { width: auto; height: auto; border: 0; border-radius: 0; color:  black; }
     .calendar-toolbar .calendar-month-link:hover { background: transparent; color: var(--green); }
     .calendar-toolbar h2 { margin: 0; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: var(--paper-light); }
