@@ -159,8 +159,8 @@ async function renderPage({ authenticated, error = "", dates = [] }) {
     .password-form input { min-height: 46px; padding: 11px 12px; border: 1px solid #c9c3b7; border-radius: 2em; font: inherit; }
     .password-form .button { width: max-content; border: 0; cursor: pointer; }
     .form-error { min-height: 1.5em; margin: 0; color: #a3312c; }
-p {
-    font-size: 4em;
+.legal-subheading {
+    font-size: 2em;
     text-align: center;
   }
 
