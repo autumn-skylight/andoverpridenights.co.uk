@@ -37,7 +37,15 @@
         src="https://assets.andoverpridenights.co.uk/images/logos/andover-pride-nights-logo.png"
         alt="Andover's Pride Nights">
     </a>
-    <nav class="site-nav" aria-label="Main navigation">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-navigation">
+      <span class="nav-toggle-label">Menu</span>
+      <span class="nav-toggle-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+    <nav class="site-nav" id="site-navigation" aria-label="Main navigation">
       <a href="https://www.facebook.com/groups/1618357456269886/?ref=share">Facebook</a>
       <a href="https://chat.whatsapp.com/DTv6O6o61bpIRokKMU7D2p">Whatsapp</a>
       <a href="https://andoverpridenights.co.uk/dates">Dates</a>
@@ -200,6 +208,22 @@
     <span class="footer-age">18+</span>
   </footer>
   <script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const siteNavigation = document.querySelector('#site-navigation');
+
+    navToggle.addEventListener('click', () => {
+      const isOpen = navToggle.getAttribute('aria-expanded') === 'true';
+      navToggle.setAttribute('aria-expanded', String(!isOpen));
+      siteNavigation.classList.toggle('is-open', !isOpen);
+    });
+
+    siteNavigation.addEventListener('click', (event) => {
+      if (event.target.closest('a')) {
+        navToggle.setAttribute('aria-expanded', 'false');
+        siteNavigation.classList.remove('is-open');
+      }
+    });
+
     const contactForm = document.querySelector('#contact-form');
     const contactSubject = document.querySelector('#contact-subject');
     const customSubjectField = document.querySelector('#custom-subject-field');

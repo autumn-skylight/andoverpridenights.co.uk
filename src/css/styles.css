@@ -74,6 +74,10 @@ body {
   font-size: 14px;
 }
 
+.nav-toggle {
+  display: none;
+}
+
 .site-nav a,
 .footer-links a {
   text-decoration: none;
@@ -774,6 +778,14 @@ p {
     width: calc(100% - 48px);
   }
 
+  .wordmark-logo {
+    height: 96px;
+  }
+
+  .site-nav {
+    gap: clamp(12px, 3vw, 24px);
+  }
+
   .hero-inner,
   .details-section {
     width: calc(100% - 80px);
@@ -833,22 +845,94 @@ p {
 
 @media (max-width: 600px) {
   .site-header {
+    position: relative;
+    flex-direction: row;
+    justify-content: space-between;
     width: calc(100% - 40px);
     height: 78px;
+    gap: 12px;
   }
 
   .wordmark-logo {
     height: 54px;
-    max-width: 190px;
+    max-width: 170px;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .nav-toggle-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 18px;
+    height: 14px;
+  }
+
+  .nav-toggle-icon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 160ms ease, opacity 160ms ease;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-icon span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-icon span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-icon span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
   }
 
   .site-nav {
-    gap: 15px;
+    position: absolute;
+    top: 68px;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: none;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--paper-light);
+    box-shadow: 0 14px 30px rgba(33, 31, 27, 0.12);
   }
 
-  .nav-cta {
-    padding: 10px 13px;
-    font-size: 11px;
+  .site-nav.is-open {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .site-nav a {
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  .site-nav .nav-cta {
+    margin-top: 4px;
+    align-self: stretch;
+    padding: 11px 12px;
+    font-size: 12px;
   }
 
   .hero {
@@ -866,8 +950,8 @@ p {
     gap: 10px;
     width: calc(100% - 48px);
     min-height: 0;
-    margin-top: 90px;
-    padding: 32px 0 46px;
+    margin-top: 155px;
+    padding: 20px 0 46px;
   }
 
   .hero-copy {
