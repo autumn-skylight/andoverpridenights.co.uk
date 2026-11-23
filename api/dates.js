@@ -482,6 +482,7 @@ async function renderPage({
       });
     }
   </script>
+<script src="src/js/nav.js"></script>
 </body>
 </html>`;
 }
