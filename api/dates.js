@@ -481,79 +481,31 @@ async function renderPage({
         }
       });
     }
-const menu = document.querySelector(".site-menu");
+    const navToggle = document.querySelector(".nav-toggle");
+    const siteNavigation = document.querySelector("#site-navigation");
 
-if (menu) {
-  const toggle = menu.querySelector(".site-menu-toggle");
-  const panel = menu.querySelector(".site-menu-panel");
-  const backdrop = menu.querySelector(".site-menu-backdrop");
-  const links = [...panel.querySelectorAll("a")];
-  let previouslyFocused = null;
+    if (navToggle && siteNavigation) {
+      navToggle.addEventListener("click", () => {
+        const isOpen = navToggle.getAttribute("aria-expanded") === "true";
+        navToggle.setAttribute("aria-expanded", String(!isOpen));
+        siteNavigation.classList.toggle("is-open", !isOpen);
+      });
 
-  const closeMenu = (returnFocus = true) => {
-    menu.classList.remove("is-open");
-    toggle.setAttribute("aria-expanded", "false");
-    toggle.setAttribute("aria-label", "Open navigation menu");
-    toggle.querySelector(".site-menu-toggle-label").textContent = "Menu";
-    panel.setAttribute("aria-hidden", "true");
-    panel.inert = true;
-    document.body.classList.remove("site-menu-open");
+      siteNavigation.addEventListener("click", (event) => {
+        if (event.target.closest("a")) {
+          navToggle.setAttribute("aria-expanded", "false");
+          siteNavigation.classList.remove("is-open");
+        }
+      });
 
-    if (returnFocus && previouslyFocused instanceof HTMLElement) {
-      previouslyFocused.focus();
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && navToggle.getAttribute("aria-expanded") === "true") {
+          navToggle.setAttribute("aria-expanded", "false");
+          siteNavigation.classList.remove("is-open");
+          navToggle.focus();
+        }
+      });
     }
-  };
-
-  const openMenu = () => {
-    previouslyFocused = document.activeElement;
-    menu.classList.add("is-open");
-    toggle.setAttribute("aria-expanded", "true");
-    toggle.setAttribute("aria-label", "Close navigation menu");
-    toggle.querySelector(".site-menu-toggle-label").textContent = "Close";
-    panel.setAttribute("aria-hidden", "false");
-    panel.inert = false;
-    document.body.classList.add("site-menu-open");
-    links[0].focus();
-  };
-
-  toggle.addEventListener("click", () => {
-    if (toggle.getAttribute("aria-expanded") === "true") {
-      closeMenu();
-    } else {
-      openMenu();
-    }
-  });
-
-  backdrop.addEventListener("click", () => closeMenu());
-  links.forEach((link) => link.addEventListener("click", () => closeMenu(false)));
-
-  document.addEventListener("keydown", (event) => {
-    if (!menu.classList.contains("is-open")) {
-      return;
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      closeMenu();
-      return;
-    }
-
-    if (event.key !== "Tab") {
-      return;
-    }
-
-    if (event.shiftKey && document.activeElement === links[0]) {
-      event.preventDefault();
-      toggle.focus();
-    } else if (event.shiftKey && document.activeElement === toggle) {
-      event.preventDefault();
-      links[links.length - 1].focus();
-    } else if (!event.shiftKey && document.activeElement === links[links.length - 1]) {
-      event.preventDefault();
-      toggle.focus();
-    }
-  });
-}
   </script>
 </body>
 </html>`;
