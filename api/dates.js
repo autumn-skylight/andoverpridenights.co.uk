@@ -360,39 +360,40 @@ async function renderPage({
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="theme-color" content="#fbf8ef">
   <title>Dates | Andover's Pride Nights</title>
   <link rel="stylesheet" href="/src/css/styles.css">
   <link rel="icon" href="https://assets.andoverpridenights.co.uk/images/logos/andover-pride-nights-new-logo.ico" type="image/png">
   <style>
     .dates-list { padding-left: 1.4rem; }
-    .dates-list li { margin: 0.9rem 0; color: #514f48; }
+    .dates-list li { margin: 0.9rem 0; color: var(--muted); }
     .date-link { color: var(--ink); text-decoration: none; }
-    .date-link:hover strong { color: var(--green); text-decoration: underline; text-underline-offset: 4px; }
-    .date-update-beside { margin-left: 0.55rem; color: #587d43; font-weight: 700; }
-    .date-update-underneath { margin: 0.35rem 0 0; color: #656158; }
+    .date-link:hover strong { color: var(--plum); text-decoration: underline; text-underline-offset: 4px; }
+    .date-update-beside { margin-left: 0.55rem; color: var(--plum); font-weight: 700; }
+    .date-update-underneath { margin: 0.35rem 0 0; color: var(--muted); }
     .dates-view-tabs { display: flex; gap: 8px; margin-bottom: 18px; color: black;}
     .dates-view-tabs a { padding: 8px 16px; border: 1px solid var(--ink); border-radius: 999px; text-decoration: none; color: black; }
-    .dates-view-tabs a.active { background: var(--green); color: white; }
+    .dates-view-tabs a.active { background: var(--plum); color: white; }
     .dates-list-month { margin: 0 0 12px; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
     .dates-list-month a { text-decoration: none; color: black;}
-    .dates-list-month a:hover { color: var(--green); text-decoration: underline; text-underline-offset: 5px; }
+    .dates-list-month a:hover { color: var(--plum); text-decoration: underline; text-underline-offset: 5px; }
     .dates-month-group + .dates-month-group { margin-top: 42px; padding-top: 28px; border-top: 1px solid var(--line); }
     .calendar-toolbar { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; margin-bottom: 18px; text-align: center; }
     .calendar-toolbar > a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--ink); border-radius: 50%; color: var(--ink); text-decoration: none; }
     .calendar-nav-disabled { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: #aaa69e; }
     .calendar-toolbar > a:hover { background: var(--ink); color: white; }
     .calendar-toolbar .calendar-month-link { width: auto; height: auto; border: 0; border-radius: 0; color:  black; }
-    .calendar-toolbar .calendar-month-link:hover { background: transparent; color: var(--green); }
+    .calendar-toolbar .calendar-month-link:hover { background: transparent; color: var(--plum); }
     .calendar-toolbar h2 { margin: 0; font-family: var(--serif); font-size: clamp(24px, 4vw, 38px); font-weight: 400; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: var(--paper-light); }
     .calendar-weekday { min-height: 42px; padding: 12px 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 700; text-align: center; text-transform: uppercase; }
     .calendar-day { min-height: 132px; padding: 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 13px; }
     .calendar-day a { display: block; min-height: 115px; color: inherit; text-decoration: none; }
     .calendar-day time { display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; }
-    .calendar-day.has-event time { background: var(--green); color: white; font-weight: 700; }
-    .calendar-day.outside-month { background: #efede6; color: #aaa69e; }
-    .calendar-event { display: grid; gap: 4px; margin-top: 8px; padding: 8px; border-left: 3px solid #e7d2ef; background: #f7f3e9; color: var(--ink); }
-    .calendar-event strong { color: var(--green); font-size: 12px; }
+    .calendar-day.has-event time { background: var(--plum); color: white; font-weight: 700; }
+    .calendar-day.outside-month { background: #f1eee3; color: #aaa69e; }
+    .calendar-event { display: grid; gap: 4px; margin-top: 8px; padding: 8px; border-left: 3px solid var(--purple); background: var(--paper); color: var(--ink); }
+    .calendar-event strong { color: var(--plum); font-size: 12px; }
     .calendar-event span { font-size: 12px; line-height: 1.35; }
     .event-overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; }
     .event-backdrop { position: absolute; inset: 0; background: rgb(33 31 27 / 48%); backdrop-filter: blur(7px); }
@@ -401,9 +402,9 @@ async function renderPage({
     .event-dialog .eyebrow { margin-bottom: 14px; }
     .event-dialog h2 { margin: 0 36px 16px 0; font-family: var(--serif); font-size: clamp(32px, 6vw, 48px); font-weight: 400; line-height: 1.1; }
     .event-dialog p:last-child { margin-bottom: 0; color: var(--muted); line-height: 1.7; }
-    .event-dialog .event-dialog-beside { margin-bottom: 10px; color: var(--green); font-weight: 700; }
+    .event-dialog .event-dialog-beside { margin-bottom: 10px; color: var(--plum); font-weight: 700; }
     .event-dialog-close { position: absolute; top: 12px; right: 16px; color: var(--ink); font-size: 32px; line-height: 1; text-decoration: none; }
-    .event-dialog-close:hover { color: var(--green); }
+    .event-dialog-close:hover { color: var(--plum); }
     @keyframes event-dialog-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
     @media (prefers-reduced-motion: reduce) { .event-dialog { animation: none; } }
     @media (max-width: 600px) {
@@ -419,7 +420,7 @@ async function renderPage({
     .password-form label { font-weight: 700; }
     .password-form input { min-height: 46px; padding: 11px 12px; border: 1px solid #c9c3b7; border-radius: 2em; font: inherit; }
     .password-form .button { width: max-content; border: 0; cursor: pointer; }
-    .form-error { min-height: 1.5em; margin: 0; color: #a3312c; }
+    .form-error { min-height: 1.5em; margin: 0; color: var(--plum); }
 .legal-subheading {
     font-size: 1.5em;
     text-align: center;
